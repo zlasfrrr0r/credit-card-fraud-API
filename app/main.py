@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 from .schemas import Transaction, Prediction
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -19,20 +19,21 @@ async def lifespan(app: FastAPI):
     print("Shutting down...")
 
 app = FastAPI(lifespan=lifespan)
+router = APIRouter(prefix="/api/v1")
 
-@app.get("/")
+@router.get("/")
 def root():
     return {
         "Message": "Root"
     }
 
-@app.get("/health")
+@router.get("/health")
 def health():
     return {
         "Health": "OK"
     }
 
-@app.post("/predict")
+@router.post("/predict")
 def predict(input: Transaction):
     TRANSACTION = input.model_dump()
     X_input = pd.DataFrame([TRANSACTION])
@@ -42,3 +43,5 @@ def predict(input: Transaction):
         "is_fraud": pred.item(),
         "fraud_proba": float(proba[0][1])
     }
+
+app.include_router(router=router)
