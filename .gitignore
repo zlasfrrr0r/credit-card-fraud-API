@@ -1,3 +1,4 @@
 fraud-detection-venv
 __pycache__/
 *.pyc
+*.env
