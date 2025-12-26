@@ -1,4 +1,4 @@
-# FROM base image of python 3.10
+# FROM base image of python 3.11
 FROM python:3.11-slim
 
 # create working directory
@@ -13,5 +13,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # expose port
 EXPOSE 8000
 
-# command
+# run app
 CMD [ "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000" ]
