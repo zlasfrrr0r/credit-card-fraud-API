@@ -17,6 +17,12 @@ Exposes a REST API built with FastAPI, loads a pre-trained scikit-learn pipeline
 
 #### GET `/health`
 
+#### Request
+
+```bash
+GET http://localhost:8000/api/v1/health
+```
+
 #### Response
 
 ```json
@@ -25,7 +31,13 @@ Exposes a REST API built with FastAPI, loads a pre-trained scikit-learn pipeline
 }
 ```
 
-### GET `/`
+#### GET `/`
+
+#### Request
+
+```bash
+GET http://localhost:8000/api/v1
+```
 
 #### Response
 
@@ -41,9 +53,13 @@ Exposes a REST API built with FastAPI, loads a pre-trained scikit-learn pipeline
 
 Predict whether a transaction is fraudulent.
 
-#### Request Body
+### Request Body
 
-API expects a single transaction with the following structure:
+```bash
+POST http://localhost:8000/api/v1/predict
+```
+
+API expects a single transaction and **only accepts JSON requests**, with the following body:
 
 ```json
 {
@@ -82,6 +98,8 @@ API expects a single transaction with the following structure:
 
 ## Response
 
+All responses are returned in **JSON format** only.
+
 ```json
 {
     "is_fraud": 1,
@@ -106,7 +124,7 @@ docker run -p 8000:8000 fraud-detection-api
 API will be available at:
 
 ```bash
-http://localhost:8000
+http://localhost:8000/api/v1
 ```
 
 ### Dependencies
