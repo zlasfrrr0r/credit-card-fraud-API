@@ -13,6 +13,8 @@ Exposes a REST API built with FastAPI, loads a pre-trained scikit-learn pipeline
 
 ## API Endpoints
 
+**Note**: Since the API is hosted on Render, the first request *may* take **30-60** seconds to respond due cold start.
+
 ### Health Check
 
 #### GET `/health`
@@ -20,7 +22,7 @@ Exposes a REST API built with FastAPI, loads a pre-trained scikit-learn pipeline
 #### Request
 
 ```bash
-GET http://localhost:8000/api/v1/health
+curl https://credit-card-fraud-api-n78c.onrender.com/api/v1/health
 ```
 
 #### Response
@@ -31,12 +33,14 @@ GET http://localhost:8000/api/v1/health
 }
 ```
 
+### Root
+
 #### GET `/`
 
 #### Request
 
 ```bash
-GET http://localhost:8000/api/v1
+curl https://credit-card-fraud-api-n78c.onrender.com/api/v1/
 ```
 
 #### Response
@@ -47,16 +51,20 @@ GET http://localhost:8000/api/v1
 }
 ```
 
-## Predict Fraud
+### Predict
 
-### POST `/predict`
+#### POST `/predict`
 
 Predict whether a transaction is fraudulent.
 
 ### Request Body
 
 ```bash
-POST http://localhost:8000/api/v1/predict
+curl -X POST \
+https://credit-card-fraud-api-n78c.onrender.com/api/v1/predict \
+-H "Content-Type: application/json" \
+-H "Accept: application/json" \
+-d '{ ... }'
 ```
 
 API expects a single transaction and **only accepts JSON requests**, with the following body:
@@ -107,32 +115,26 @@ All responses are returned in **JSON format** only.
 }
 ```
 
-##### Response fields
+## API Documentations
 
-- `"is_fraud"`: Model prediction (0/1)
-- `"fraud_proba"`: Probability of fraud
+This API is built with [FastAPI](https://fastapi.tiangolo.com/), which automatically generates interactive docs for ease of use. Feel free to explore the endpoints and test requests through the following interfaces:
 
-### Running locally (Docker)
+  - Swagger UI (Interactive Docs): `https://credit-card-fraud-api-n78c.onrender.com/api/v1/docs`
 
-Run the following (Docker Engine must be on):
+  - ReDoc (Alternative Docs): `https://credit-card-fraud-api-n78c.onrender.com/api/v1/redoc`
 
-```bash
-docker build -t fraud-detection-api .
-docker run -p 8000:8000 fraud-detection-api
-```
+  - OpenAPI Schema (Machine-readable): `https://credit-card-fraud-api-n78c.onrender.com/api/v1/openapi.json`
 
-API will be available at:
+These interfaces allow you to understand the API endpoints, required inputs, and expected responses (without reading source code).
 
-```bash
-http://localhost:8000/api/v1
-```
 
-### Dependencies
 
-Found at requirements.txt
+[Back to top](#credit-card-fraud-detection-api)
+[Model](#model-used)
+[API Endpoints](#api-endpoints)
+  - [Health](#health-check)
+  - [Root](#root)
+  - [Predict](#predict)
+[API Docs](#api-documentations)
 
-###### Next?
-
-- CI to be added soon.
-- Following that will be deployment.
-- CI/CD follows that.
+Please reach out for any questions or feedback
