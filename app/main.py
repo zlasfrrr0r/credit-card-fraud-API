@@ -1,5 +1,6 @@
 from fastapi import FastAPI, APIRouter
 from .schemas import Transaction, Prediction
+from .config import API_PREFIX
 from contextlib import asynccontextmanager
 from pathlib import Path
 import joblib
@@ -18,8 +19,12 @@ async def lifespan(app: FastAPI):
     del model   # delete model in shutdown
     print("Shutting down...")
 
-app = FastAPI(lifespan=lifespan)
-router = APIRouter(prefix="/api/v1")
+app = FastAPI(lifespan=lifespan,
+              docs_url=f"{API_PREFIX}/docs",
+              redoc_url=f"{API_PREFIX}/redoc",
+              openapi_url=f"{API_PREFIX}/openapi.json")
+
+router = APIRouter(prefix=API_PREFIX)
 
 @router.get("/")
 def root():
