@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: CI/CD Pipeline
 
 on:
     push:
@@ -53,8 +53,6 @@ jobs:
         needs: [test, build-push]
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
-
             - name: Deploy to Render
               uses: JorgeLNJunior/render-deploy@v1.4.7
               with:
