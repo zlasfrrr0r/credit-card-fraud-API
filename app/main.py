@@ -1,5 +1,5 @@
 from fastapi import FastAPI, APIRouter
-from .schemas import Transaction, Prediction
+from .schemas import Transaction
 from .config import API_PREFIX
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -12,8 +12,7 @@ MODEL_PATH = BASE_DIR / "fraud-detection.joblib"
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global model
-    # model = load(MODEL_PATH) # load model on startup to avoid loading on every request
-    model = joblib.load(MODEL_PATH)
+    model = joblib.load(MODEL_PATH) # load model on startup to avoid loading on every request
     print("Model loaded. Ready for inference!")
     yield
     del model   # delete model in shutdown
