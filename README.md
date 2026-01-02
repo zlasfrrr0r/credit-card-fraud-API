@@ -1,3 +1,12 @@
+### Navigate
+- [Top](#credit-card-fraud-detection-api)
+- [Model](#model-used)
+- [API Endpoints](#api-endpoints)
+  - [Health](#health-check)
+  - [Root](#root)
+  - [Predict](#predict)
+- [API Docs](#api-documentations)
+
 # Credit Card Fraud Detection API
 
 An ML Inference API for detecting fraudulent credit card transactions.
@@ -127,14 +136,5 @@ This API is built with [FastAPI](https://fastapi.tiangolo.com/), which automatic
 
 These interfaces allow you to understand the API endpoints, required inputs, and expected responses (without reading source code).
 
-
-
-- [Back to top](#credit-card-fraud-detection-api)
-- [Model](#model-used)
-- [API Endpoints](#api-endpoints)
-  - [Health](#health-check)
-  - [Root](#root)
-  - [Predict](#predict)
-- [API Docs](#api-documentations)
 
 Please reach out for any questions or feedback
