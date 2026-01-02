@@ -4,6 +4,14 @@ An ML Inference API for detecting fraudulent credit card transactions.
 
 Exposes a REST API built with FastAPI, loads a pre-trained scikit-learn pipeline which I trained beforehand, and returns a fraud prediction (0 = legitimate, 1 = fraud) as well as the probability of the transaction being fraudulent. 
 
+Navigate:
+- [Model](#model-used)
+- [API Endpoints](#api-endpoints)
+  - [Health](#health-check)
+  - [Root](#root)
+  - [Predict](#predict)
+- [API Docs](#api-documentations)
+
 ## Model Used
 
 - **Algorithm**: Logistic Regression
@@ -127,14 +135,5 @@ This API is built with [FastAPI](https://fastapi.tiangolo.com/), which automatic
 
 These interfaces allow you to understand the API endpoints, required inputs, and expected responses (without reading source code).
 
-
-
-- [Back to top](#credit-card-fraud-detection-api)
-- [Model](#model-used)
-- [API Endpoints](#api-endpoints)
-  - [Health](#health-check)
-  - [Root](#root)
-  - [Predict](#predict)
-- [API Docs](#api-documentations)
 
 Please reach out for any questions or feedback
