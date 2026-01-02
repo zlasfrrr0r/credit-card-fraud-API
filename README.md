@@ -1,17 +1,16 @@
-### Navigate
-- [Top](#credit-card-fraud-detection-api)
+# Credit Card Fraud Detection API
+
+An ML Inference API for detecting fraudulent credit card transactions.
+
+Exposes a REST API built with FastAPI, loads a pre-trained scikit-learn pipeline which I trained beforehand, and returns a fraud prediction (0 = legitimate, 1 = fraud) as well as the probability of the transaction being fraudulent. 
+
+Navigate:
 - [Model](#model-used)
 - [API Endpoints](#api-endpoints)
   - [Health](#health-check)
   - [Root](#root)
   - [Predict](#predict)
 - [API Docs](#api-documentations)
-
-# Credit Card Fraud Detection API
-
-An ML Inference API for detecting fraudulent credit card transactions.
-
-Exposes a REST API built with FastAPI, loads a pre-trained scikit-learn pipeline which I trained beforehand, and returns a fraud prediction (0 = legitimate, 1 = fraud) as well as the probability of the transaction being fraudulent. 
 
 ## Model Used
 
