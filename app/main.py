@@ -5,6 +5,8 @@ from slowapi.errors import RateLimitExceeded
 
 import json
 import hashlib
+import redis.asyncio as aioredis
+import os
 
 from fastapi import FastAPI, APIRouter, Request
 from .schemas import Transaction
@@ -18,6 +20,10 @@ def gen_cache_key(payload: Transaction):
     payload_json = json.dumps(payload.model_dump(), sort_keys=True)
     hash_digest = hashlib.sha256(payload_json.encode("utf-8")).hexdigest()
     return f"cache:prediction:{hash_digest}"
+
+# instantiate asyn redis connection pool
+redis_client = aioredis.Redis.from_url(REDIS_URL, decode_responses=True)
+CACHE_TTL_SECONDS = 3600 # 1 hour exp
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 MODEL_PATH = BASE_DIR / "fraud-detection.joblib"
