@@ -68,14 +68,40 @@ def health():
 
 @router.post("/predict")
 @limiter.limit("7/minute")
-def predict(request: Request, input: Transaction):
+async def predict(request: Request, input: Transaction):
+
+    cache_key = gen_cache_key(input)
+
+    try:
+        cached_result = await redis_client.get(cache_key)
+        if cached_result:
+            response_data = json.loads(cached_result)
+            response_data["cached"] = True
+            return response_data
+    except Exception as e:
+        print(f"redis cache get error: {e}")
+
+    # cache miss case
     TRANSACTION = input.model_dump()
     X_input = pd.DataFrame([TRANSACTION])
     pred = model.predict(X_input)
     proba = model.predict_proba(X_input)
-    return {
+    response_data = {
         "is_fraud": pred.item(),
         "fraud_proba": float(proba[0][1])
     }
+
+    # store result in redis
+    try:
+        await redis_client.setex(
+            name=cache_key,
+            time=CACHE_TTL_SECONDS,
+            value=json.dumps(response_data)
+        )
+    except Exception as e:
+        print(f"Redis cache store error: {e}")
+
+    response_data["cached"] = False
+    return response_data
 
 app.include_router(router=router)
