@@ -15,7 +15,7 @@ services:
     build: .
     container_name: fastapi_web1
     environment:
-      - REDIS-URL=redis://redis:6379/0
+      - REDIS_URL=redis://redis:6379/0
       - APP_INSTANCE=web1
     depends_on:
       redis:
@@ -41,4 +41,3 @@ services:
     depends_on:
       - web1
       - web2
-  
