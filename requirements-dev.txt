@@ -1,2 +1,0 @@
-pytest==9.0.2
-fastapi-cli==0.0.20
