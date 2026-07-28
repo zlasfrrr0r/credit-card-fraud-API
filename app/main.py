@@ -1,6 +1,11 @@
-from fastapi import FastAPI, APIRouter
+# to attach slowapi properly
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+from fastapi import FastAPI, APIRouter, Request
 from .schemas import Transaction
-from .config import API_PREFIX
+from .config import API_PREFIX, REDIS_URL
 from contextlib import asynccontextmanager
 from pathlib import Path
 import joblib
@@ -8,6 +13,11 @@ import pandas as pd
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 MODEL_PATH = BASE_DIR / "fraud-detection.joblib"
+
+limiter = Limiter(
+    key_func=get_remote_address,
+    storage_uri=REDIS_URL
+)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -23,14 +33,19 @@ app = FastAPI(lifespan=lifespan,
               redoc_url=f"{API_PREFIX}/redoc",
               openapi_url=f"{API_PREFIX}/openapi.json")
 
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 router = APIRouter(prefix=API_PREFIX)
 
 @router.get("/")
-def root():
+@limiter.limit("30/minute")
+def root(request: Request):
     return {
         "Message": "Root"
     }
 
+# unlimited for docker/LB ping
 @router.get("/health")
 def health():
     return {
@@ -38,7 +53,8 @@ def health():
     }
 
 @router.post("/predict")
-def predict(input: Transaction):
+@limiter.limit("7/minute")
+def predict(request: Request, input: Transaction):
     TRANSACTION = input.model_dump()
     X_input = pd.DataFrame([TRANSACTION])
     pred = model.predict(X_input)
