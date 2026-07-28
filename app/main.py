@@ -3,6 +3,9 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
+import json
+import hashlib
+
 from fastapi import FastAPI, APIRouter, Request
 from .schemas import Transaction
 from .config import API_PREFIX, REDIS_URL
@@ -10,6 +13,11 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 import joblib
 import pandas as pd
+
+def gen_cache_key(payload: Transaction):
+    payload_json = json.dumps(payload.model_dump(), sort_keys=True)
+    hash_digest = hashlib.sha256(payload_json.encode("utf-8")).hexdigest()
+    return f"cache:prediction:{hash_digest}"
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 MODEL_PATH = BASE_DIR / "fraud-detection.joblib"
