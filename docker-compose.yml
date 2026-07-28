@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis_cache
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+  web1:
+    build: .
+    container_name: fastapi_web1
+    environment:
+      - REDIS-URL=redis://redis:6379/0
+      - APP_INSTANCE=web1
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  web2:
+    build: .
+    container_name: fastapi_web2
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - APP_INSTANCE=web2
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx_load_balancer
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - web1
+      - web2
+  
