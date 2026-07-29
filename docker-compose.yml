@@ -11,6 +11,19 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+
+  celery_workers:
+    build: .
+    container_name: celery_worker
+    command: celery -A app.worker.celery_app worker --loglevel=info
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_URL=redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+
   web1:
     build: .
     container_name: fastapi_web1
