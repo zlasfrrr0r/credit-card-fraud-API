@@ -22,8 +22,8 @@ def get_model():
         _model = joblib.load(MODEL_PATH)
     return _model
 
-@celery_app.task(name="predict_task_async")
-def predict_task_async(transaction_data: dict) -> dict:
+@celery_app.task(name="predict_async_task")
+def predict_async_task(transaction_data: dict) -> dict:
     model = get_model()
     X_input = pd.DataFrame([transaction_data])
 

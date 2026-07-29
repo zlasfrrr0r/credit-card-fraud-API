@@ -1,13 +1,19 @@
-# to attach slowapi properly
+# rate limiting
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
+# cache 
 import json
 import hashlib
 import redis.asyncio as aioredis
-import os
 
+# async tasks
+from celery.result import AsyncResult
+from .worker import predict_async_task
+from fastapi import status
+
+# API startup & model loading
 from fastapi import FastAPI, APIRouter, Request
 from .schemas import Transaction
 from .config import API_PREFIX, REDIS_URL
@@ -66,10 +72,10 @@ def health():
         "Health": "OK"
     }
 
+# sync endpoint
 @router.post("/predict")
 @limiter.limit("7/minute")
 async def predict(request: Request, input: Transaction):
-
     cache_key = gen_cache_key(input)
 
     try:
@@ -81,7 +87,7 @@ async def predict(request: Request, input: Transaction):
     except Exception as e:
         print(f"redis cache get error: {e}")
 
-    # cache miss case
+    # cache miss
     TRANSACTION = input.model_dump()
     X_input = pd.DataFrame([TRANSACTION])
     pred = model.predict(X_input)
@@ -89,9 +95,8 @@ async def predict(request: Request, input: Transaction):
     response_data = {
         "is_fraud": pred.item(),
         "fraud_proba": float(proba[0][1])
-    }
+        }
 
-    # store result in redis
     try:
         await redis_client.setex(
             name=cache_key,
@@ -103,5 +108,47 @@ async def predict(request: Request, input: Transaction):
 
     response_data["cached"] = False
     return response_data
+
+# async endpoint (task queueing)
+@router.post("/predict/async", status_code=status.HTTP_202_ACCEPTED)
+@limiter.limit("10/minute")
+async def predict_async(request: Request, input: Transaction):
+
+    cache_key = gen_cache_key(input)
+
+    try:
+        cached_result = await redis_client.get(cache_key)
+        if cached_result:
+            response_data = json.loads(cached_result)
+            response_data["cached"] = True
+            return {
+                "status": "COMPLETED_VIA_CACHE",
+                "result": response_data
+            }
+    except Exception as e:
+        print(f"redis cache get error: {e}")
+
+    # cache miss -> enqueue to celery workers
+    task = predict_async_task.delay(input.model_dump())
+
+    return {
+        "task_id": task.id,
+        "status": "PENDING",
+        "poll_url": F"{API_PREFIX}/tasks/{task.id}"
+    }
+
+@router.get("/tasks/{task_id}")
+def get_task_status(task_id: str):
+    task_result = AsyncResult(task_id)
+    response = {
+        "task_id": task_id,
+        "status": task_result.status
+    }
+    if task_result.status == "SUCCESS":
+        response["result"] = task_result.result
+    if task_result.status == "FAILURE":
+        response["error"] = str(task_result.result)
+
+    return response
 
 app.include_router(router=router)
