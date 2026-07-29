@@ -9,8 +9,7 @@ import hashlib
 import redis.asyncio as aioredis
 
 # async tasks
-from celery.result import AsyncResult
-from .worker import predict_async_task
+from .worker import predict_async_task, celery_app
 from fastapi import status
 
 # API startup & model loading
@@ -139,7 +138,7 @@ async def predict_async(request: Request, input: Transaction):
 
 @router.get("/tasks/{task_id}")
 def get_task_status(task_id: str):
-    task_result = AsyncResult(task_id)
+    task_result = celery_app.AsyncResult(task_id)
     response = {
         "task_id": task_id,
         "status": task_result.status
