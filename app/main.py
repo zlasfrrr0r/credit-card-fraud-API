@@ -15,7 +15,7 @@ from fastapi import status
 # API startup & model loading
 from fastapi import FastAPI, APIRouter, Request
 from .schemas import Transaction
-from .config import API_PREFIX, REDIS_URL
+from .config import API_PREFIX, REDIS_URL, CACHE_TTL_SECONDS
 from contextlib import asynccontextmanager
 from pathlib import Path
 import joblib
@@ -28,7 +28,6 @@ def gen_cache_key(payload: Transaction):
 
 # instantiate asyn redis connection pool
 redis_client = aioredis.Redis.from_url(REDIS_URL, decode_responses=True)
-CACHE_TTL_SECONDS = 3600 # 1 hour exp
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 MODEL_PATH = BASE_DIR / "fraud-detection.joblib"
@@ -128,7 +127,7 @@ async def predict_async(request: Request, input: Transaction):
         print(f"redis cache get error: {e}")
 
     # cache miss -> enqueue to celery workers
-    task = predict_async_task.delay(input.model_dump())
+    task = predict_async_task.delay(input.model_dump(), cache_key)
 
     return {
         "task_id": task.id,
