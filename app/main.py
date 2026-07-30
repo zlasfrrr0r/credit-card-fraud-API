@@ -1,6 +1,6 @@
 # rate limiting
 from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
+from slowapi.util import get_ipaddr
 from slowapi.errors import RateLimitExceeded
 
 # cache 
@@ -33,7 +33,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 MODEL_PATH = BASE_DIR / "fraud-detection.joblib"
 
 limiter = Limiter(
-    key_func=get_remote_address,
+    key_func=get_ipaddr,
     storage_uri=REDIS_URL
 )
 

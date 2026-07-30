@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   redis:
     image: redis:7-alpine
@@ -27,6 +25,7 @@ services:
   web1:
     build: .
     container_name: fastapi_web1
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips="*"
     environment:
       - REDIS_URL=redis://redis:6379/0
       - APP_INSTANCE=web1
@@ -37,6 +36,7 @@ services:
   web2:
     build: .
     container_name: fastapi_web2
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips="*"
     environment:
       - REDIS_URL=redis://redis:6379/0
       - APP_INSTANCE=web2
