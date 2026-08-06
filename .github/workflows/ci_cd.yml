@@ -7,6 +7,18 @@ on:
 jobs:
     test:
         runs-on: ubuntu-latest
+
+        services:
+          redis:
+            image: redis:7-alpine
+            ports:
+              - 6379:6379
+            options: >-
+              --health-cmd "redis-cli ping"
+              --health-interval 5s
+              --health-timeout 3s
+              --health-retries 5
+
         steps:
             - uses: actions/checkout@v4
 
@@ -22,6 +34,9 @@ jobs:
                 pip install -r requirements.txt
 
             - name: Run Pytest
+              env:
+                REDIS_HOST: localhost
+                REDIS_PORT: 6379
               run: pytest --verbose
     
     build-push:
