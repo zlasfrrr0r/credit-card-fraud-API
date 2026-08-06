@@ -5,6 +5,7 @@ from pathlib import Path
 from .config import CELERY_BROKER_URL, CELERY_RESULT_URL, REDIS_URL, CACHE_TTL_SECONDS
 import redis
 import json
+from .pipeline import preprocess_single, run_vectorized_inference
 
 celery_app = Celery(
     "tasks",
@@ -43,3 +44,20 @@ def predict_async_task(transaction_data: dict, cache_key: str) -> dict:
         r.setex(cache_key, CACHE_TTL_SECONDS, json.dumps(result))
 
     return result
+
+@celery_app.task(name="predict_batch_async_task")
+def predict_batch_async_task(transactions_list: list) -> list:
+    if not transactions_list:
+        return {"predictions": [], "total_predicted": 0}
+
+    model = get_model()
+
+    df_input = pd.DataFrame(transactions_list)
+
+    preds = model.predict(df_input)
+    probas = model.predict_proba(df_input)[:, 1]
+
+    return [
+        {"is_fraud": int(is_fraud), "fraud_proba": float(proba)}
+        for is_fraud, proba in zip(preds, probas)
+    ]

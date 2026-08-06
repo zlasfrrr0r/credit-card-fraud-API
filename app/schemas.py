@@ -54,4 +54,3 @@ class TransactionBatch(BaseModel):
 class BatchPrediction(BaseModel):
     predictions: List[Prediction]
     total_predicted: int
-    cached: bool = False

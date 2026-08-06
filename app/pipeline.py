@@ -14,13 +14,12 @@ def preprocess_single(transaction: Transaction) -> pd.DataFrame:
     data = transaction.model_dump()
     return pd.DataFrame([data], columns=FEATURE_ORDER)
 
-def proprocess_batch_vectorized(transactions: List[Transaction]) -> Tuple[pd.DataFrame, np.ndarray]:
-    # Extract feature values into single contiguous 2D NumPY float matrix to eliminate row-by-row iteration (O(N))
-    matrix = np.array(
-        [[getattr(t, feature) for feature in FEATURE_ORDER] for t in transactions],
-        dtype=np.float64
-    )
-    df = pd.DataFrame(matrix, columns=FEATURE_ORDER)
+def preprocess_batch_vectorized(transactions: List[Transaction]) -> Tuple[pd.DataFrame, np.ndarray]:
+    # Batch dump into dict rows
+    batch_dicts = [t.model_dump() for t in transactions]
+    df = pd.DataFrame(batch_dicts, columns=FEATURE_ORDER)
+    matrix = df.to_numpy()
+
     return df, matrix
 
 def run_vectorized_inference(model: Any, X_input: pd.DataFrame) -> List[Dict[str, Any]]:
