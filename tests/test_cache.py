@@ -1,8 +1,5 @@
-from unittest.mock import AsyncMock, patch
 from fastapi.testclient import TestClient
-from app.schemas import Transaction
-from app.main import app, gen_cache_key
-from conftest import sample_payload
+from app.main import app
 import time
 
 client = TestClient(app=app)
