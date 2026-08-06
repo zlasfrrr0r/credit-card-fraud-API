@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+from app.config import API_PREFIX
 from app.main import app
 
 client = TestClient(app)
@@ -6,7 +7,7 @@ client = TestClient(app)
 def test_rate_limit(client, sample_payload):
 
     # Rate Limited Endpoint
-    endpoint = "api/v1/predict"
+    endpoint = f"{API_PREFIX}/predict"
     limit = 7
 
     responses = []

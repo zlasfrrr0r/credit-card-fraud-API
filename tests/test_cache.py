@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+from app.config import API_PREFIX
 from app.main import app
 import time
 
@@ -8,7 +9,7 @@ def test_caching_behavior(client, sample_payload):
 
     # 1. First Request - Cache Miss
     start_time = time.time()
-    res_1 = client.post("/api/v1/predict", json=sample_payload)
+    res_1 = client.post(f"{API_PREFIX}/predict", json=sample_payload)
     dur_1 = (time.time() - start_time) * 1000  # ms
 
     assert res_1.status_code == 200
@@ -18,7 +19,7 @@ def test_caching_behavior(client, sample_payload):
 
     # 2. Second Request - Cache Hit
     start_time = time.time()
-    res_2 = client.post("/api/v1/predict", json=sample_payload)
+    res_2 = client.post(f"{API_PREFIX}/predict", json=sample_payload)
     dur_2 = (time.time() - start_time) * 1000  # ms
 
     assert res_2.status_code == 200
