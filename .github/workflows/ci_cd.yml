@@ -7,36 +7,21 @@ on:
 jobs:
     test:
         runs-on: ubuntu-latest
-
-        services:
-          redis:
-            image: redis:7-alpine
-            ports:
-              - 6379:6379
-            options: >-
-              --health-cmd "redis-cli ping"
-              --health-interval 5s
-              --health-timeout 3s
-              --health-retries 5
-
         steps:
             - uses: actions/checkout@v4
 
-            - name: Python Setup
-              uses: actions/setup-python@v5
-              with:
-                python-version: '3.11'
-                cache: 'pip'
-
-            - name: Install dependencies
+            - name: Build Container
               run: |
-                python -m pip install --upgrade pip
-                pip install -r requirements.txt
+                docker compose up -d --build
+                sleep 12
+              
+            - name: Run Integration Test
+              run: |
+                docker compose exec -T web1 pytest --verbose
 
-            - name: Run Pytest
-              env:
-                REDIS_URL: redis://localhost:6379
-              run: pytest --verbose
+            - name: Clean up Container
+              if: always()
+              run: docker compose down
     
     build-push:
         needs: test
