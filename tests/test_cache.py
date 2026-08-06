@@ -15,7 +15,7 @@ def test_caching_behavior(client, sample_payload):
     assert res_1.status_code == 200
     data_1 = res_1.json()
     assert "is_fraud" in data_1
-    assert "probability" in data_1
+    assert "fraud_proba" in data_1
 
     # 2. Second Request - Cache Hit
     start_time = time.time()
@@ -27,7 +27,7 @@ def test_caching_behavior(client, sample_payload):
 
     # Predictions must match
     assert data_1["is_fraud"] == data_2["is_fraud"]
-    assert data_1["probability"] == data_2["probability"]
+    assert data_1["fraud_proba"] == data_2["fraud_proba"]
 
     # Cache hit must be faster
     assert dur_2 < dur_1

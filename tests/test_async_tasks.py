@@ -7,7 +7,7 @@ client = TestClient(app=app)
 
 def test_async_tasks(client, sample_payload):
     """
-    Async Workflow:
+    Workflow:
     1. Enqueue Task -> 202 Accepted
     2. Poll Task -> status goes from PENDING to SUCCESS
     """
@@ -36,6 +36,7 @@ def test_async_tasks(client, sample_payload):
             assert "result" in poll_body
             assert "is_fraud" in poll_body["result"]
             assert "fraud_proba" in poll_body["result"]
+            break
 
         time.sleep(0.5)
 
