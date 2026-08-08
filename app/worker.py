@@ -5,7 +5,7 @@ from pathlib import Path
 from .config import CELERY_BROKER_URL, CELERY_RESULT_URL, REDIS_URL, CACHE_TTL_SECONDS
 import redis
 import json
-from .pipeline import preprocess_single, run_vectorized_inference
+from .pipeline import FEATURE_ORDER
 
 celery_app = Celery(
     "tasks",
@@ -23,6 +23,11 @@ def get_model():
     global _model
     if _model is None:
         _model = joblib.load(MODEL_PATH)
+        # warm up worker
+        dummy_df = pd.DataFrame([{col: 0.0 for col in FEATURE_ORDER}])
+        _model.predict(dummy_df)
+        _model.predict_proba(dummy_df)
+        print("Celery worker warmed up and ready!")
     return _model
 
 @celery_app.task(name="predict_async_task")

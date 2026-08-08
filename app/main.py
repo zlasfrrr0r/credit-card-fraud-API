@@ -47,8 +47,16 @@ limiter = Limiter(
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global model
-    model = joblib.load(MODEL_PATH) # load model on startup to avoid loading on every request
-    print("Model loaded. Ready for inference!")
+    # Load and warmp up model on startup
+    model = joblib.load(MODEL_PATH)
+    dummy_transaction = Transaction(
+        Time=0.0, V1=0.0, V2=0.0, V3=0.0, V4=0.0, V5=0.0, V6=0.0, V7=0.0, V8=0.0, V9=0.0,
+        V10=0.0, V11=0.0, V12=0.0, V13=0.0, V14=0.0, V15=0.0, V16=0.0, V17=0.0, V18=0.0, V19=0.0,
+        V20=0.0, V21=0.0, V22=0.0, V23=0.0, V24=0.0, V25=0.0, V26=0.0, V27=0.0, V28=0.0, Amount=0.0
+    )
+    df_dummy = preprocess_single(dummy_transaction)
+    _ = run_vectorized_inference(model, df_dummy)
+    print("Model loaded and warmed up. Ready for inference!")
     yield
     del model   # delete model in shutdown
     print("Shutting down...")
