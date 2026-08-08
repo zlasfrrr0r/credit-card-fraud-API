@@ -9,17 +9,24 @@ import hashlib
 import redis.asyncio as aioredis
 
 # async tasks
-from .worker import predict_async_task, celery_app
+from .worker import predict_async_task, celery_app, predict_batch_async_task
 from fastapi import status
 
 # API startup & model loading
 from fastapi import FastAPI, APIRouter, Request
-from .schemas import Transaction
 from .config import API_PREFIX, REDIS_URL, CACHE_TTL_SECONDS
 from contextlib import asynccontextmanager
 from pathlib import Path
 import joblib
 import pandas as pd
+
+# model prediction
+from .pipeline import (
+    preprocess_single,
+    preprocess_batch_vectorized,
+    run_vectorized_inference
+)
+from .schemas import Transaction, TransactionBatch, Prediction, BatchPrediction
 
 def gen_cache_key(payload: Transaction):
     payload_json = json.dumps(payload.model_dump(), sort_keys=True)
@@ -71,7 +78,7 @@ def health():
     }
 
 # sync endpoint
-@router.post("/predict")
+@router.post("/predict", response_model=Prediction)
 @limiter.limit("7/minute")
 async def predict(request: Request, input: Transaction):
     cache_key = gen_cache_key(input)
@@ -79,33 +86,28 @@ async def predict(request: Request, input: Transaction):
     try:
         cached_result = await redis_client.get(cache_key)
         if cached_result:
-            response_data = json.loads(cached_result)
-            response_data["cached"] = True
-            return response_data
+            response = json.loads(cached_result)
+            response["cached"] = True
+            return response
     except Exception as e:
         print(f"redis cache get error: {e}")
 
     # cache miss
-    TRANSACTION = input.model_dump()
-    X_input = pd.DataFrame([TRANSACTION])
-    pred = model.predict(X_input)
-    proba = model.predict_proba(X_input)
-    response_data = {
-        "is_fraud": pred.item(),
-        "fraud_proba": float(proba[0][1])
-        }
+    df_input = preprocess_single(input)
+    results = run_vectorized_inference(model, df_input)
+    response = results[0]
 
     try:
         await redis_client.setex(
             name=cache_key,
             time=CACHE_TTL_SECONDS,
-            value=json.dumps(response_data)
+            value=json.dumps(response)
         )
     except Exception as e:
         print(f"Redis cache store error: {e}")
 
-    response_data["cached"] = False
-    return response_data
+    response["cached"] = False
+    return response
 
 # async endpoint (task queueing)
 @router.post("/predict/async", status_code=status.HTTP_202_ACCEPTED)
@@ -132,7 +134,39 @@ async def predict_async(request: Request, input: Transaction):
     return {
         "task_id": task.id,
         "status": "PENDING",
-        "poll_url": F"{API_PREFIX}/tasks/{task.id}"
+        "poll_url": f"{API_PREFIX}/tasks/{task.id}"
+    }
+
+@router.post("/predict/batch", response_model=BatchPrediction)
+@limiter.limit("7/minute")
+async def predict_batch(request: Request, batch: TransactionBatch):
+    """
+    Processes up to 1,000 transactions executing vectorised 
+    operations on a single pass
+    """
+    df_input, _ = preprocess_batch_vectorized(batch.transactions)
+    results = run_vectorized_inference(model, df_input)
+
+    return {
+        "predictions": results,
+        "total_predicted": len(results)
+    }
+
+@router.post("/predict/batch/async", status_code=202)
+@limiter.limit("5/minute")
+async def predict_batch_async(request: Request, batch: TransactionBatch):
+    """
+    Accepts up to 1,000 transactions, returns instant results for cache hits, 
+    and offloads cache misses to a single optimized vectorized worker task.
+    """
+    batch_data = [tx.model_dump() for tx in batch.transactions]
+
+    task = predict_batch_async_task.delay(batch_data)
+
+    return {
+        "task_id": task.id,
+        "status": "PENDING",
+        "poll_url": f"{API_PREFIX}/tasks/{task.id}"
     }
 
 @router.get("/tasks/{task_id}")
