@@ -28,6 +28,8 @@ from .pipeline import (
 )
 from .schemas import Transaction, TransactionBatch, Prediction, BatchPrediction
 
+from prometheus_fastapi_instrumentator import Instrumentator
+
 def gen_cache_key(payload: Transaction):
     payload_json = json.dumps(payload.model_dump(), sort_keys=True)
     hash_digest = hashlib.sha256(payload_json.encode("utf-8")).hexdigest()
@@ -65,6 +67,8 @@ app = FastAPI(lifespan=lifespan,
               docs_url=f"{API_PREFIX}/docs",
               redoc_url=f"{API_PREFIX}/redoc",
               openapi_url=f"{API_PREFIX}/openapi.json")
+
+Instrumentator().instrument(app=app).expose(app=app, endpoint="/metrics")
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
