@@ -28,6 +28,8 @@ from .pipeline import (
 )
 from .schemas import Transaction, TransactionBatch, Prediction, BatchPrediction
 
+from prometheus_fastapi_instrumentator import Instrumentator
+
 def gen_cache_key(payload: Transaction):
     payload_json = json.dumps(payload.model_dump(), sort_keys=True)
     hash_digest = hashlib.sha256(payload_json.encode("utf-8")).hexdigest()
@@ -47,8 +49,16 @@ limiter = Limiter(
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global model
-    model = joblib.load(MODEL_PATH) # load model on startup to avoid loading on every request
-    print("Model loaded. Ready for inference!")
+    # Load and warmp up model on startup
+    model = joblib.load(MODEL_PATH)
+    dummy_transaction = Transaction(
+        Time=0.0, V1=0.0, V2=0.0, V3=0.0, V4=0.0, V5=0.0, V6=0.0, V7=0.0, V8=0.0, V9=0.0,
+        V10=0.0, V11=0.0, V12=0.0, V13=0.0, V14=0.0, V15=0.0, V16=0.0, V17=0.0, V18=0.0, V19=0.0,
+        V20=0.0, V21=0.0, V22=0.0, V23=0.0, V24=0.0, V25=0.0, V26=0.0, V27=0.0, V28=0.0, Amount=0.0
+    )
+    df_dummy = preprocess_single(dummy_transaction)
+    _ = run_vectorized_inference(model, df_dummy)
+    print("Model loaded and warmed up. Ready for inference!")
     yield
     del model   # delete model in shutdown
     print("Shutting down...")
@@ -57,6 +67,8 @@ app = FastAPI(lifespan=lifespan,
               docs_url=f"{API_PREFIX}/docs",
               redoc_url=f"{API_PREFIX}/redoc",
               openapi_url=f"{API_PREFIX}/openapi.json")
+
+Instrumentator().instrument(app=app).expose(app=app, endpoint="/metrics")
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)

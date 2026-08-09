@@ -17,7 +17,7 @@ jobs:
               
             - name: Run Integration Test
               run: |
-                docker compose exec -T web1 pytest --verbose
+                docker compose exec -T web1 pytest --verbose -W ignore::DeprecationWarning
 
             - name: Clean up Container
               if: always()

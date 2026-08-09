@@ -1,0 +1,10 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: "fastapi_nodes"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["fastapi_web1:8000", "fastapi_web2:8000"]
+        labels:
+          env: "development"
