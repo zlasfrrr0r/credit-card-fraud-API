@@ -1,5 +1,17 @@
 # Credit Card Fraud Detection API
 
+## Currently under update...
+Production Stress Test & Observability Benchmarks:
+
+Sustained Throughput: 77.87 RPS across 4 endpoints (Sync, Async Task Queue, Sync Batch, Async Batch) on CPU-constrained hardware.
+
+Reliability: 100% success rate across 18,700+ requests with 0.00% error rate under 100 concurrent virtual users.
+
+Latency Percentiles: Median (p50) = 870ms, p90 = 1600ms, p99 = 2100ms, Max = 2400ms.
+
+Failure Root Cause Analysis: Identified long-tail queue growth and Nginx proxy timeout bottlenecks (502/504) under prolonged high concurrency, informing worker configuration and buffer tuning.
+
+
 An ML Inference API for detecting fraudulent credit card transactions.
 
 Exposes a REST API built with FastAPI, loads a pre-trained scikit-learn pipeline which I trained beforehand, and returns a fraud prediction (0 = legitimate, 1 = fraud) as well as the probability of the transaction being fraudulent. 
