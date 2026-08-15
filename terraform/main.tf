@@ -52,9 +52,15 @@ resource "aws_security_group" "api_sg" {
   }
 }
 
+resource "aws_key_pair" "deployer" {
+  key_name   = "fraud-api-deployer-key"
+  public_key = file(pathexpand("~/.ssh/fraud_api_aws.pub"))
+}
+
 resource "aws_instance" "api_server" {
   ami = data.aws_ami.ubuntu.id
   instance_type = "t3.micro"
+  key_name = aws_key_pair.deployer.key_name
   vpc_security_group_ids = [ aws_security_group.api_sg.id ]
 
   root_block_device {
