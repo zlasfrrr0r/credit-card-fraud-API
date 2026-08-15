@@ -72,7 +72,7 @@ resource "aws_instance" "api_server" {
   user_data = <<-EOF
               #!/bin/bash
               # wait for system apt/dpkg locks to clear
-              while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do
+              while systemctl is-active --quiet daily-apt-upgrade.service; do
                 sleep 5
               done
 
