@@ -70,25 +70,32 @@ resource "aws_instance" "api_server" {
   }
 
   user_data = <<-EOF
-                #!/bin/bash
+              #!/bin/bash
               # wait for system apt/dpkg locks to clear
               while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do
                 sleep 5
               done
 
               # create 2GB swap file
-              fallocate -l 2G /swapfile
-              chmod 600 /swapfile
-              mkswap /swapfile
-              swapon /swapfile
-              echo '/swapfile none swap sw 0 0' >> /etc/fstab
+              if [ ! -f /swapfile ]; then
+                fallocate -l 2G /swapfile
+                chmod 600 /swapfile
+                mkswap /swapfile
+                swapon /swapfile
+                echo '/swapfile none swap sw 0 0' >> /etc/fstab
+              fi
 
               # install Docker
               apt-get update -y
-              apt-get install -y ca-certificates curl gnupg lsb-release
+              apt-get install -y ca-certificates curl gnupg
+
+              . /etc/os-release
+
               mkdir -p /etc/apt/keyrings
               curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-              echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+              echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $VERSION_CODENAME stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+
               apt-get update -y
               apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
@@ -96,6 +103,10 @@ resource "aws_instance" "api_server" {
               usermod -aG docker ubuntu
               systemctl enable docker
               systemctl start docker
+
+              # create /app
+              mkdir -p /home/ubuntu/app
+              chown -R ubuntu:ubuntu /home/ubuntu/app
               EOF
               
   tags = {
