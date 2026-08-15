@@ -80,7 +80,7 @@ jobs:
                 key: ${{ secrets.EC2_SSH_KEY }}
                 envs: DOCKERHUB_USERNAME, GRAFANA_ADMIN_PASSWORD
                 script: |
-                  export PATH=$PATH:/usr/bin
+                  export PATH=$PATH:/usr/bin:/usr/sbin:/usr/local/bin
                   cd ~/app
                   docker compose pull
                   docker compose up -d --remove-orphans
