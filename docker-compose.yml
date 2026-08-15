@@ -11,7 +11,7 @@ services:
       retries: 5
 
   celery_workers:
-    build: .
+    image: ${DOCKERHUB_USERNAME}/fraud-api:latest
     container_name: celery_worker
     command: celery -A app.worker.celery_app worker --loglevel=info
     environment:
@@ -23,7 +23,7 @@ services:
         condition: service_healthy
 
   web1:
-    build: .
+    image: ${DOCKERHUB_USERNAME}/fraud-api:latest
     container_name: fastapi_web1
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips="*"
     environment:
@@ -34,7 +34,7 @@ services:
         condition: service_healthy
 
   web2:
-    build: .
+    image: ${DOCKERHUB_USERNAME}/fraud-api:latest
     container_name: fastapi_web2
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips="*"
     environment:
