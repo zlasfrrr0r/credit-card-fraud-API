@@ -2,3 +2,15 @@ fraud-detection-venv
 __pycache__/
 *.pyc
 *.env
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+crash.log
+tfplan
