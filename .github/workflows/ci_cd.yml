@@ -7,12 +7,16 @@ on:
 jobs:
     test:
         runs-on: ubuntu-latest
+        env:
+          DOCKER_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          GRAFANA_ADMIN_PASSWORD: ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
         steps:
             - uses: actions/checkout@v4
 
             - name: Build Container
               run: |
-                docker compose up -d --build
+                docker compose build
+                docker compose up -d
                 sleep 12
               
             - name: Run Integration Test
@@ -69,11 +73,12 @@ jobs:
 
               env:
                 DOCKER_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+                GRAFANA_ADMIN_PASSWORD: ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
               with:
                 host: ${{ secrets.EC2_HOST }}
                 username: ubuntu
                 key: ${{ secrets.EC2_HOST }}
-                envs: DOCKER_USERNAME
+                envs: DOCKER_USERNAME, GRAFANA_ADMIN_PASSWORD
                 script: |
                   cd ~/app
                   sudo docker compose pull
