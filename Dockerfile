@@ -4,11 +4,11 @@ FROM python:3.11-slim
 # create working directory
 WORKDIR /app
 
-# copy everything here into the working directory
-COPY . /app
-
 # install dependencies
+COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . /app
 
 # expose port
 EXPOSE 8000
