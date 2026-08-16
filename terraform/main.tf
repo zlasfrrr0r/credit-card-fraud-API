@@ -71,6 +71,8 @@ resource "aws_instance" "api_server" {
 
   user_data = <<-EOF
               #!/bin/bash
+              export DEBIAN_FRONTEND=noninteractive
+
               # wait for system apt/dpkg locks to clear
               while systemctl is-active --quiet daily-apt-upgrade.service; do
                 sleep 5
@@ -90,11 +92,13 @@ resource "aws_instance" "api_server" {
               apt-get install -y ca-certificates curl gnupg
 
               . /etc/os-release
+              CODENAME=$VERSION_CODENAME
 
               mkdir -p /etc/apt/keyrings
-              curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 
-              echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $VERSION_CODENAME stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+              curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor --yes -o /etc/apt/keyrings/docker.gpg
+
+              echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $CODENAME stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
               apt-get update -y
               apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
