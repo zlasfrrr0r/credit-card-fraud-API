@@ -73,10 +73,13 @@ resource "aws_instance" "api_server" {
               #!/bin/bash
               export DEBIAN_FRONTEND=noninteractive
 
-              # wait for system apt/dpkg locks to clear
-              while systemctl is-active --quiet daily-apt-upgrade.service; do
-                sleep 5
-              done
+              systemctl stop apt-daily.service apt-daily-upgrade.service apt-daily.timer apt-daily-upgrade.timer
+
+              killall apt apt-get dpkg 2>/dev/null
+              rm -f /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock
+              rm -f /var/lib/apt/lists/lock /var/cache/apt/archives/lock
+
+              dpkg --configure -a
 
               # create 2GB swap file
               if [ ! -f /swapfile ]; then
